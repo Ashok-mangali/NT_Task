@@ -25,20 +25,31 @@ const App = () => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
-  const handleSubmit = async (e) => {
+  const handleSubmit = async (e, id) => {
     e.preventDefault();
     try {
-      if (updateId) {
-        await axios.put('http://127.0.0.1:5000/api/up', formData);
+      if (id) {
+        console.log('Updating data for ID:', id);
+        await axios.put(`http://127.0.0.1:5000/api/up/${id}`, formData);
+        const updatedData = data.map(item => {
+          if (item._id === id) {
+            return { ...item, ...formData };
+          }
+          return item;
+        });
+        setData(updatedData);
         setUpdateId(null);
-      } else {
-        await axios.post('http://127.0.0.1:5000/api/po', formData);
         
+        console.log('Data updated successfully.');
+      } else {
+        console.log('Adding new data:', formData);
+        await axios.post('http://127.0.0.1:5000/api/po', formData);
+        fetchData();
+        console.log('New data added successfully.');
       }
-      fetchData();
       setFormData({});
     } catch (error) {
-      console.error('Error adding data: ', error);
+      console.error('Error adding/updating data: ', error);
     }
   };
 
@@ -46,39 +57,40 @@ const App = () => {
     const selectedData = data.find((item) => item._id === id);
     setFormData(selectedData);
     setUpdateId(id);
+    console.log('Editing data for ID:', id);
   };
 
   const handleDelete = async (id) => {
     try {
+      console.log("Deleting item with ID:", id);
       await axios.delete(`http://127.0.0.1:5000/api/del/${id}`);
       setData(data.filter(item => item._id !== id));
+      console.log('Data deleted successfully.');
     } catch (error) {
       console.error('Error deleting data: ', error);
     }
   };
+
+  console.log('Rendering data:', data);
+  
+  
   
 
   return (
     <div className='App'>
       <h1>Data from MangoDB</h1>
-      <form onSubmit={handleSubmit}>
-      {/* <input style={{ color:'black', margin:'5px', padding:'7px', fontWeight:'bold'}}
-          type="number"
-          placeholder="Enter Your Id"
-          name="Id"
-          value={formData.Id || ''}
-          onChange={handleChange}
-        /> */}
+      <form onSubmit={(e) => handleSubmit(e, updateId)}>
+      
         <input style={{ color:'black', margin:'5px', padding:'7px', fontWeight:'bold'}}
           type="text"
-          placeholder="Enter name"
+          placeholder="Enter Your Name"
           name="name"
           value={formData.name || ''}
           onChange={handleChange}
         />
         <input style={{ color:'black', margin:'5px', padding:'7px', fontWeight:'bold'}}
           type="number"
-          placeholder="Enter age"
+          placeholder="Enter Your Age"
           name="Age"
           value={formData.Age || ''}
           onChange={handleChange}
@@ -102,13 +114,7 @@ const App = () => {
         <div style={{ textAlign: 'center', fontWeight: 'bolder', fontSize: '15px' }}>
           
                 <ul style={{ textAlign: 'left', display: 'inline-block' }}>
-                {/* <li style={{ display: 'inline-block', marginRight: '10px', padding: "20px", justifyContent: 'space-between' }}> <h4 style={{ color: 'red' }}>Id</h4> {data.map((item) => (
-                        <h3 key={item._id}>
-                            {item.Id}
-
-                        </h3>
-
-                    ))}</li> */}
+                
                     <li style={{ display: 'inline-block', marginRight: '10px', padding: "20px", justifyContent: 'space-between' }}> <h4 style={{ color: 'red' }}>Name</h4> {data.map((item) => (
                         <h3 key={item._id}>
                             {item.name}
@@ -141,12 +147,12 @@ const App = () => {
                     ))}</li>
 
                     <li style={{ display: 'inline-block', marginRight: '10px', padding: "20px", justifyContent: 'space-between' }}><h4 style={{ color: 'red' , padding:'1px'}}>Actions</h4>{data.map((item) => (
-                        <div style={{ display: 'flex', marginRight: '10px', padding: "9px", justifyContent: 'space-between' }} >
+                        <div style={{  marginRight: '10px', padding: "9px", justifyContent: 'space-between' }} >
                             
 
                             
-                            <button onClick={() => handleEdit(item._id)} style={{color:'black', backgroundColor:'lightGreen',padding:'2px', margin:'1px'}}>Edit</button>
-                            <button onClick={() => handleDelete(item._id)}style={{color:'black', backgroundColor:'red',padding:'2px', margin:'1px'}}>Delete</button>
+                            <button onClick={() => handleEdit(item._id)}>Edit</button>
+                            <button onClick={() => handleDelete(item._id)}>Delete</button>
                         </div>
                         
                     ))}</li>
